@@ -144,7 +144,44 @@ pub struct MouseEvent {
 
 #[derive(Debug)]
 pub enum LifeCycle {
+    /// Called when the Disabled state of the widgets is changed.
+    ///
+    /// To check if a widget is disabled, see [`is_disabled`].
+    ///
+    /// To change a widget's disabled state, see [`set_disabled`].
+    ///
+    /// [`is_disabled`]: crate::EventCtx::is_disabled
+    /// [`set_disabled`]: crate::EventCtx::set_disabled
+    DisabledChanged(bool),
+    /// Called when the "hot" status changes.
+    ///
+    /// This will always be called _before_ the event that triggered it; that is,
+    /// when the mouse moves over a widget, that widget will receive
+    /// [`LifeCycle::HotChanged`] before it receives [`Event::MouseMove`].
+    ///
+    /// See [`is_hot`](crate::EventCtx::is_hot) for
+    /// discussion about the hot status.
     HotChanged(bool),
+    /// This is called when the widget-tree changes and Druid wants to rebuild the
+    /// Focus-chain.
+    ///
+    /// It is the only place from which [`register_for_focus`] should be called.
+    /// By doing so the widget can get focused by other widgets using [`focus_next`] or [`focus_prev`].
+    ///
+    /// [`register_for_focus`]: crate::LifeCycleCtx::register_for_focus
+    /// [`focus_next`]: crate::EventCtx::focus_next
+    /// [`focus_prev`]: crate::EventCtx::focus_prev
+    BuildFocusChain,
+    /// Called when the focus status changes.
+    ///
+    /// This will always be called immediately after a new widget gains focus.
+    /// The newly focused widget will receive this with `true` and the widget
+    /// that lost focus will receive this with `false`.
+    ///
+    /// See [`EventCtx::is_focused`] for more information about focus.
+    ///
+    /// [`EventCtx::is_focused`]: crate::EventCtx::is_focused
+    FocusChanged(bool),
     ViewContextChanged(ViewContext),
     TreeUpdate,
 }
