@@ -16,8 +16,8 @@ use std::any::Any;
 
 use accesskit::TreeUpdate;
 use glazier::{
-    Application, Cursor, HotKey, IdleToken, Menu, MouseEvent, Region, Scalable, SysMods,
-    WinHandler, WindowBuilder, WindowHandle,
+    Application, Cursor, HotKey, IdleToken, KeyEvent, Menu, MouseEvent, Region, Scalable, Scale,
+    SysMods, TimerToken, WinHandler, WindowBuilder, WindowHandle,
 };
 use vello::{
     kurbo::{Affine, Size},
@@ -102,6 +102,14 @@ impl<T: Send + 'static, V: View<T> + 'static> WinHandler for MainState<T, V> {
         self.schedule_render();
     }
 
+    fn size(&mut self, size: Size) {
+        self.app.window_event(Event::WindowSize(size));
+    }
+
+    fn scale(&mut self, scale: Scale) {
+        self.app.window_event(Event::WindowScale(scale));
+    }
+
     // TODO: temporary hack
     fn idle(&mut self, _: IdleToken) {
         self.app.paint();
@@ -156,8 +164,16 @@ impl<T: Send + 'static, V: View<T> + 'static> WinHandler for MainState<T, V> {
         self.handle.invalidate();
     }
 
-    fn size(&mut self, size: Size) {
-        self.app.size(size);
+    fn key_down(&mut self, event: KeyEvent) -> bool {
+        self.app.window_event(Event::KeyDown(event))
+    }
+
+    fn key_up(&mut self, event: KeyEvent) {
+        self.app.window_event(Event::KeyUp(event));
+    }
+
+    fn timer(&mut self, token: TimerToken) {
+        self.app.window_event(Event::Timer(token));
     }
 
     fn request_close(&mut self) {
@@ -165,7 +181,7 @@ impl<T: Send + 'static, V: View<T> + 'static> WinHandler for MainState<T, V> {
     }
 
     fn destroy(&mut self) {
-        Application::global().quit()
+        Application::global().quit();
     }
 
     fn as_any(&mut self) -> &mut dyn Any {
