@@ -14,7 +14,6 @@
 
 use std::any::Any;
 
-use crate::app;
 use crate::view::ViewMarker;
 use crate::{view::Id, widget::ChangeFlags, MessageResult};
 
@@ -25,17 +24,19 @@ pub struct Switch<T> {
     callback: Box<dyn Fn(&mut T) -> &mut bool + Send>,
 }
 
-pub fn switch<T>(data: &mut T, clicked: impl Fn(&mut T) -> &mut bool + Send + 'static) -> Switch<T> {
+pub fn switch<T>(
+    data: &mut T,
+    clicked: impl Fn(&mut T) -> &mut bool + Send + 'static,
+) -> Switch<T> {
     Switch::new(data, clicked)
 }
 
 impl<T> Switch<T> {
     pub fn new(data: &mut T, clicked: impl Fn(&mut T) -> &mut bool + Send + 'static) -> Self {
         let is_on = *(clicked)(data);
-        Switch{ 
+        Switch {
             is_on,
             callback: Box::new(clicked),
-            
         }
     }
 }
