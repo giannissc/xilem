@@ -14,28 +14,35 @@
 
 use std::any::Any;
 
+use crate::app;
 use crate::view::ViewMarker;
 use crate::{view::Id, widget::ChangeFlags, MessageResult};
 
 use super::{Cx, View};
 
-pub struct Switch {
+pub struct Switch<T> {
     is_on: bool,
+    callback: Box<dyn Fn(&mut T) -> &mut bool + Send>,
 }
 
-pub fn switch(is_on: bool) -> Switch {
-    Switch::new(is_on)
+pub fn switch<T>(data: &mut T, clicked: impl Fn(&mut T) -> &mut bool + Send + 'static) -> Switch<T> {
+    Switch::new(data, clicked)
 }
 
-impl Switch {
-    pub fn new(is_on: bool) -> Self {
-        Switch { is_on }
+impl<T> Switch<T> {
+    pub fn new(data: &mut T, clicked: impl Fn(&mut T) -> &mut bool + Send + 'static) -> Self {
+        let is_on = *(clicked)(data);
+        Switch{ 
+            is_on,
+            callback: Box::new(clicked),
+            
+        }
     }
 }
 
-impl ViewMarker for Switch {}
+impl<T> ViewMarker for Switch<T> {}
 
-impl<A> View<bool, A> for Switch {
+impl<T, A> View<T, A> for Switch<T> {
     type State = ();
 
     type Element = crate::widget::Switch;
@@ -66,9 +73,10 @@ impl<A> View<bool, A> for Switch {
         _id_path: &[Id],
         _state: &mut Self::State,
         _message: Box<dyn Any>,
-        app_state: &mut bool,
+        app_state: &mut T,
     ) -> MessageResult<A> {
-        *app_state = !*app_state;
+        let bool_state: &mut bool = (self.callback)(app_state);
+        *bool_state = !*bool_state;
         MessageResult::Nop
     }
 }
